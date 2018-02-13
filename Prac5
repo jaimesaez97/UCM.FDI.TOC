@@ -1,0 +1,764 @@
+Esta práctica no he sido capaz de subirla ya que github no soporta mas de 100 files.
+Como consecuencia, la subo copio-pegada.
+  PRIMERO: CD
+  SEGUNDO: UC
+  TERCERO: ENTIDAD
+  CUARTO : TEST_BENCH
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+
+----DATA----
+
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date:    18:35:31 12/18/2017 
+-- Design Name: 
+-- Module Name:    cd - Behavioral 
+-- Project Name: 
+-- Target Devices: 
+-- Tool versions: 
+-- Description: 
+--
+-- Dependencies: 
+--
+-- Revision: 
+-- Revision 0.01 - File Created
+-- Additional Comments: 
+--
+----------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx primitives in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity cd is
+	port (
+				clk   		: in  std_logic;
+				rst_n			: in  std_logic;
+				debug_addr 	: in  std_logic_vector (4  downto 0);
+				debug_we		: in  std_logic;
+				debug_din   : in  std_logic_vector (31 downto 0);
+				debug_dout  : out std_logic_vector (31 downto 0);
+				ctrl			: in  std_logic_vector (6  downto 0);
+				status		: out std_logic_vector (2  downto 0)
+			);
+end cd;
+
+architecture Behavioral of cd is
+	--------------------------------------------------------------------------------
+	--  	DECLARACIÓN DE COMPONENTES
+	--------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------
+   --Memoria
+   -----------------------------------------------------------------------------
+	component bj_mem 
+		  PORT (
+			 clka 	: IN  STD_LOGIC;
+			 wea 		: IN  STD_LOGIC_VECTOR (0  DOWNTO 0);
+			 addra 	: IN  STD_LOGIC_VECTOR (4  DOWNTO 0);
+			 dina 	: IN  STD_LOGIC_VECTOR (31 DOWNTO 0);
+			 douta 	: OUT STD_LOGIC_VECTOR (31 DOWNTO 0);
+			 clkb 	: IN  STD_LOGIC; 
+			 web 		: IN  STD_LOGIC_VECTOR (0  DOWNTO 0);
+			 addrb 	: IN  STD_LOGIC_VECTOR (4  DOWNTO 0);
+			 dinb 	: IN  STD_LOGIC_VECTOR (31 DOWNTO 0);
+			 doutb 	: OUT STD_LOGIC_VECTOR (31 DOWNTO 0)
+		  );
+	end component;
+   -----------------------------------------------------------------------------
+   --Comparador NUM memoria
+   -----------------------------------------------------------------------------
+	component cmp_mem
+		port (
+					op1      	: in std_logic_vector (31 downto 0);
+					op2    	 	: in std_logic_vector (31 downto 0);
+					mayor 		: out std_logic
+				);
+	end component;
+	--------------------------------------------------------------------------------
+	--  	DECLARACIÓN DE SEÑALES
+	--------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------
+   --Señales de control
+   -----------------------------------------------------------------------------
+	signal cntri_ld 		: std_logic;--ctrl(0)
+	signal cntri_cu		: std_logic;--ctrl(1)
+	signal cntrj_ld		: std_logic;--ctrl(2)
+	signal cntrj_cu		: std_logic;--ctrl(3)
+	signal wea				: std_logic_vector (0 downto 0);--ctrl(4)
+	signal web				: std_logic_vector (0 downto 0);--ctrl(5)
+	signal debug_mode	 	: std_logic;--ctrl(6)
+	-----------------------------------------------------------------------------
+   --Señales de estado
+   -----------------------------------------------------------------------------
+	signal cmp_i			: std_logic;--status(2)
+	signal cmp_j			: std_logic;--status(1)
+	signal comp_mem		: std_logic;--status(0)
+	-----------------------------------------------------------------------------
+   --Señales de circuito
+   -----------------------------------------------------------------------------
+	signal add_output				: std_logic_vector (4 downto 0);	--NOSE SI ESTÁ BENE
+	signal mux_addr_out  		: std_logic_vector (4  downto 0);
+	signal mux_din_out   		: std_logic_vector (31 downto 0);
+	signal mux_we_out				: std_logic_vector (0 downto 0);
+	signal mux_debug_out 		: std_logic_vector (31 downto 0);
+	signal cntri					: std_logic_vector (4  downto 0);
+	signal cntrj					: std_logic_vector (4  downto 0);
+	signal mayor_sin_signo 		: std_logic;
+	-----------------------------------------------------------------------------
+   --Señales de memoria ¿SE METEN ASÍ LOS PUERTOS?
+   -----------------------------------------------------------------------------
+	signal mem_addra 			: std_logic_vector (31 downto 0);
+	signal mem_addrb			: std_logic_vector (31 downto 0);
+	signal mem_dina 			: std_logic_vector (31 downto 0);
+	signal mem_dinb 			: std_logic_vector (31 downto 0);
+	signal mem_douta 			: std_logic_vector (31 downto 0);
+	signal mem_doutb 			: std_logic_vector (31 downto 0);
+	signal mem_wea			 	: std_logic;
+	-----------------------------------------------------------------------------
+	--PARA QUITAR WARNING BLACK BOX
+	-----------------------------------------------------------------------------
+	attribute box_type : string; 
+	attribute box_type of bj_mem : component is "black_box"; 
+begin
+	-----------------------------------------------------------------------------
+	-- Internamente no trabajo con las componentes del vector ctrl y status sino que
+	-- damos nombre a cada una de las componentes y trabajamos con ellas por
+	-- separado. De esta forma es mucho mÃ¡s legible el codigo obtenido. Luego
+	-- la componente status(0) la asigno a la senal cmp_mem, la componente
+	-- status(1) la asigna la senal cmp_j y la status(2) a cmp_i.
+	-- Y lo mismo para el vector ctrl. La componente ctrl(0) se la asigno a cntri_ld,
+	-- ctrl(1) a cntri_cu, ctrl(2) a cntrj_ld y así sucesivamente.
+	-----------------------------------------------------------------------------
+	(debug_mode,
+	 web(0), --¡BIEN?
+	 wea(0), --¡BIEN?
+	 cntrj_cu,	--¿ERROR?
+	 cntrj_ld,
+	 cntri_cu,
+	 cntri_ld) <= ctrl;
+	 
+	 status <= (cmp_i   ,	--POR QUÉ NO ASÍ :		(comp_mem,
+					cmp_j   ,	--								 cmp_j,
+					comp_mem);	   --							 cmp_i   )
+	-----------------------------------------------------------------------------
+   --Instaciación PORT-MAP memoria
+   -----------------------------------------------------------------------------
+	mem : bj_mem
+		port map (
+						--PREGUNTA: SI YO HAGO ESTO,
+						-- ¿EN DIN B ENTRA DOUTA?
+						clka 		=> 	clk,
+						wea		=> 	mux_we_out,
+						addra		=> 	mux_addr_out,
+						dina		=> 	mux_din_out,
+						douta    => 	mem_douta,
+						clkb		=> 	clk,
+						web		=> 	web,
+						addrb		=> 	add_output,
+						dinb		=> 	mem_douta,  --¿SE PUEDE METER UN PUERTO EN OTRO?
+						doutb		=> 	mem_doutb
+					 );
+	-----------------------------------------------------------------------------
+   --Instanciación PORT-MAP comparador-mem -> PROCESO
+   -----------------------------------------------------------------------------
+	--compare : cmp_mem port map (mem_douta, mem_doutb, comp_mem); --ASIGNACION A COMP_MEM
+   -----------------------------------------------------------------------------
+   --Proceso CONTADOR-i
+   -----------------------------------------------------------------------------
+	p_cntr_i : process (clk, rst_n) is
+	begin
+	if rst_n = '0' then
+		cntri <= (others => '0'); 
+	elsif rising_edge(clk) then
+		if cntri_ld = '1' then
+			cntri <= (others => '0');
+		elsif cntri_cu = '1' then
+			cntri <= cntri + 1;
+		end if;
+	end if;
+	end process p_cntr_i;
+	-----------------------------------------------------------------------------
+   --Proceso CONTADOR-j
+   -----------------------------------------------------------------------------
+	p_cntr_j : process (clk, rst_n) is
+	begin
+	if rst_n = '0' then
+		cntrj <= (others => '0'); 
+	elsif rising_edge(clk) then
+		if cntrj_ld = '1' then
+			cntrj <= (others => '0');
+		elsif cntrj_cu = '1' then
+			cntrj <= cntrj + 1;	-- VER SI FUNCIONA	
+		end if;
+	end if;
+	end process p_cntr_j;
+	-----------------------------------------------------------------------------
+   --Proceso SUMADOR
+   -----------------------------------------------------------------------------
+	p_sum : process (cntrj) is
+	begin
+		add_output <= cntrj + 1; --¿UNSIGNED(1)?
+	end process p_sum;
+	-----------------------------------------------------------------------------
+   --Proceso COMPARADOR-i
+   -----------------------------------------------------------------------------
+	p_cmp_i : process (cntri) is
+	begin
+		if (cntri = "11111") then
+			cmp_i <= '1';
+		else
+			cmp_i <= '0';
+		end if;
+		end process p_cmp_i;
+	-----------------------------------------------------------------------------
+   --Proceso COMPARADOR-j
+   -----------------------------------------------------------------------------
+	p_cmp_j : process (cntrj) is
+	begin
+		if (cntrj = "11110") then
+			cmp_j <= '1';
+		else
+			cmp_j <= '0';
+		end if;
+	end process p_cmp_j;
+	-----------------------------------------------------------------------------
+   --Proceso COMPARADOR-mem  
+   -----------------------------------------------------------------------------
+--	p_comp_mem : process (mem_douta, mem_doutb) is --DOUTA y DOUTB
+--	begin
+--		if unsigned(mem_douta) > unsigned(mem_doutb) then
+--			--se ordenan de mayor a menor: 1 si hay que ordenar
+--			comp_mem <= '0';
+--		else
+--			comp_mem <= '1';
+--		end if;
+--	end process p_comp_mem;
+	-----------------------------------------------------------------------------
+   -- Proceso mayor sin signo (CMP_MEM_1)
+   -----------------------------------------------------------------------------
+	p_calcula_mayor : process (mem_douta, mem_doutb) is
+	begin
+		if mem_douta(30 downto 0) > mem_doutb(30 downto 0) then
+			mayor_sin_signo <= '0';
+		else
+			mayor_sin_signo <= '1';
+		end if;
+	end process p_calcula_mayor;
+	-----------------------------------------------------------------------------
+   -- Proceso comparacion (CMP_MEM_2)
+   -----------------------------------------------------------------------------
+	p_compare : process (mem_douta, mem_doutb, mayor_sin_signo) is
+	begin
+		--comp_mem = 1 si mem_douta < mem_doutb
+		if mayor_sin_signo = '0' then
+			--a > b
+			if mem_douta(31) = '0' then
+				comp_mem <= '0'; 
+			else
+				comp_mem <= '1';
+			end if;
+		else 
+			--b < a
+			if mem_doutb(31) = '0' then 
+				comp_mem <= '1';
+			else 
+				comp_mem <= '0';
+			end if;
+		end if;
+	end process p_compare;
+   -----------------------------------------------------------------------------
+   --Proceso MUX_ADDR
+   -----------------------------------------------------------------------------
+	p_mux_addr : process (debug_mode, debug_addr, cntrj) is
+	begin
+	if debug_mode = '1' then
+		mux_addr_out <= debug_addr;
+	else 
+		mux_addr_out <= cntrj;
+	end if;
+	end process p_mux_addr;
+	-----------------------------------------------------------------------------
+   --Proceso MUX_DIN
+   -----------------------------------------------------------------------------
+	p_mux_din : process (debug_mode, debug_din, mem_doutb) is --DOUTR DENTRO¿?
+	begin
+	if debug_mode = '1' then
+		mux_din_out <= debug_din;
+	else
+		mux_din_out <= mem_doutb;
+	end if;
+	end process p_mux_din;
+	-----------------------------------------------------------------------------
+   --Proceso MUX_WE
+   -----------------------------------------------------------------------------
+	p_mux_we : process (debug_mode, debug_we, wea) is
+	begin
+	if debug_mode = '1' then
+		mux_we_out(0) <= debug_we;
+	else
+		mux_we_out <= wea;
+		-- ¡OJO!
+		-- wea NO ES mem_wea: mem_wea es lo que tiene
+		-- que entrar a la memoria en el puerto WEa
+		-- y wea es la señal de control
+	end if;
+	end process p_mux_we;
+	-----------------------------------------------------------------------------
+   --Proceso MUX_DOUT  ¿SE USA?
+   -----------------------------------------------------------------------------
+	p_mux_dout : process (debug_mode, mem_douta) is
+	begin
+	if debug_mode = '1' then
+		debug_dout <= "00000000000000000000000000000000";
+	else 
+		debug_dout <= mem_douta;
+	end if;
+	end process p_mux_dout;
+	
+end Behavioral;
+
+
+
+
+---CONTROL---
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date:    19:41:17 12/13/2017 
+-- Design Name: 
+-- Module Name:    sort - Behavioral 
+-- Project Name: 
+-- Target Devices: 
+-- Tool versions: 
+-- Description: 
+--
+-- Dependencies: 
+--
+-- Revision: 
+-- Revision 0.01 - File Created
+-- Additional Comments: 
+--
+----------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx primitives in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity uc is
+	port (
+				clk 			: in  std_logic;
+				rst_n			: in  std_logic;
+				ini			: in  std_logic;
+				fin 			: out std_logic;
+				ctrl        : out std_logic_vector (6 downto 0);
+				status		: in  std_logic_vector (2 downto 0)
+			);
+end uc;
+
+architecture rtl of uc is 
+	--------------------------------------------------------------------------------
+	--  DECLARACIÓN DE SEÑALES 
+	--------------------------------------------------------------------------------
+   type t_st 							     is (s0, s1, s2, s3, s4, s5, s6, s7, s8, s9);
+   signal current_state, next_state   : t_st;
+   signal cmp_i   					     : std_logic;--status(2)
+   signal cmp_j 						     : std_logic;--status(1)
+   signal cmp_mem 						  : std_logic;--status(0)
+begin
+   -----------------------------------------------------------------------------
+   -- Internamente no trabajo con las componentes del vector status sino que
+   -- damos nombre a cada una de las componentes y trabajamos con ellas por
+   -- separado. De esta forma es mucho más legible el codigo obtenido. Luego
+   -- la componente status(0) la asigno a la senal cmp_mem, la componente
+   -- status(1) a la señal cmp_j y la componente status(2) a cmp_i.
+   -----------------------------------------------------------------------------
+   p_status_signals : (cmp_i		,
+							  cmp_j		, 
+							  cmp_mem) 		<= status;
+   -----------------------------------------------------------------------------
+   -- Proceso estado siguiente.
+   -----------------------------------------------------------------------------
+   p_next_state : process (current_state, cmp_i, cmp_j, cmp_mem, ini) is
+	begin  -- process p_next_state
+     case current_state is
+       when s0 =>
+            if ini = '1' then
+				   next_state <= s1;
+            else
+               next_state <= s0;
+            end if;
+       when s1 =>
+		 	   next_state <= s2;
+       when s2 =>
+		      if cmp_i = '1' then --¿SE PONE A 1 CUANDO ES >=?
+					next_state <= s0;
+				else
+					next_state <= s3;
+		      end if;
+       when s3 =>
+           next_state <= s4;
+       when s4 =>
+		  	   if cmp_j = '1' then	--CAMBIAR A 1
+					next_state <= s9;
+				else
+					next_state <= s5;
+				end if;
+       when s5 =>
+			  next_state <= s6;
+       when s6 =>
+			  if cmp_mem = '1' then
+					--HAGA LO QUE HAGA AQUÍ EL TB ESTA MAL
+					-- ¿porqué puede ser?
+					-- 	si pongo = 1 (como debería ser):
+					--				+la primera OP la hace bien porque a>b pero 
+					--				 TODAS LAS DEMÁS LAS HACE AL REVÉS
+					--		si pongo = 0 (mal):
+					--				+la primera OP la CALCULA bien y cmp = 0, y pasa
+					--				 por s7 así que está mal.
+					--				+TODAS LAS OPS DAN COMPARE = 0
+					next_state <= s7;
+			  else
+					next_state <= s8;
+			  end if;
+		 when s7 =>
+			  next_state <= s8;
+		 when s8 =>
+			  next_state <= s4;
+		 when s9 =>
+			  next_state <= s2;
+       when others => null;
+     end case;
+   end process p_next_state;
+	-----------------------------------------------------------------------------
+   -- Proceso salida
+   -----------------------------------------------------------------------------
+	p_outputs : process (current_state) is
+	   	--DEFINICION SEÑALES DE CONTROL
+		constant c_cntri_ld      : std_logic_vector(6 downto 0) := "0000001";--ctrl(0)
+		constant c_cntri_cu      : std_logic_vector(6 downto 0) := "0000010";--ctrl(1)
+		constant c_cntrj_ld      : std_logic_vector(6 downto 0) := "0000100";--ctrl(2)
+		constant c_cntrj_cu      : std_logic_vector(6 downto 0) := "0001000";--ctrl(3)
+		constant c_wea   		    : std_logic_vector(6 downto 0) := "0010000";--ctrl(4)
+		constant c_web    		 : std_logic_vector(6 downto 0) := "0100000";--ctrl(5)
+		constant c_debug_mode    : std_logic_vector(6 downto 0) := "1000000";--ctrl(6)
+	begin
+		case current_state is
+			when S0 => 
+				ctrl <= c_debug_mode;
+				fin  <= '1';
+			when S1 =>
+				fin  <= '0';
+				ctrl <= c_cntri_ld   ;
+			when S2 => 
+				ctrl <= (others => '0');
+				fin  <= '0';
+			when S3 =>
+				ctrl <= c_cntrj_ld    ;
+				fin  <= '0';
+			when S4 =>
+				ctrl <= (others => '0');
+				fin  <= '0';
+			when S5 =>
+				ctrl <= (others => '0');
+				--LEER PORT A  : WEA = 0
+				--ADDRA <- J   : C_DEBUG_MODE = 0
+				--LEER PORT B  : WEB = 0
+				--ADDRB <- J+1 : C_DEBUG_MODE = 0
+				fin  <= '0';
+			when S6 => 
+				ctrl <= (others => '0')  ;
+				fin  <= '0';
+			when S7 => 
+				ctrl <= c_wea        or
+						  c_web         ;
+				--ESCRIB PORT A   : WEA = 1
+				--ADDRA  <- J     : C_DEBUG_MODE = 0
+				--DINA   <- DOUTB : C_DEBUG_MODE = 0
+				--ESCRIB PORT B   : WEB = 1
+				--ADDRB  <- J+1   : C_DEBUG_MODE = 0
+				--DINB   <- A     : C_DEBUG_MODE = 0
+				fin  <= '0';
+			when S8 =>
+				ctrl <= c_cntrj_cu       ;
+				fin  <= '0';
+			when S9 => 
+				ctrl <= c_cntri_cu       ;
+				fin  <= '0';
+		end case;
+	end process p_outputs;
+	-----------------------------------------------------------------------------
+   -- Proceso reloj
+   -----------------------------------------------------------------------------
+	p_status_reg : process (clk, rst_n) is
+   begin
+     if rst_n = '0' then
+       current_state <= s0;
+     elsif rising_edge(clk) then
+       current_state <= next_state;
+     end if;
+   end process p_status_reg;
+	
+end architecture rtl;
+
+
+---SORT---
+
+----------------------------------------------------------------------------------
+-- Company: 
+-- Engineer: 
+-- 
+-- Create Date:    18:25:41 12/18/2017 
+-- Design Name: 
+-- Module Name:    sort - Behavioral 
+-- Project Name: 
+-- Target Devices: 
+-- Tool versions: 
+-- Description: 
+--
+-- Dependencies: 
+--
+-- Revision: 
+-- Revision 0.01 - File Created
+-- Additional Comments: 
+--
+----------------------------------------------------------------------------------
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+
+-- Uncomment the following library declaration if using
+-- arithmetic functions with Signed or Unsigned values
+--use IEEE.NUMERIC_STD.ALL;
+
+-- Uncomment the following library declaration if instantiating
+-- any Xilinx primitives in this code.
+--library UNISIM;
+--use UNISIM.VComponents.all;
+
+entity sort is
+	port (
+				clk 			: in  std_logic;
+				rst_n			: in  std_logic;
+				ini			: in  std_logic;
+				fin 			: out std_logic;
+				debug_addr  : in  std_logic_vector (4  downto 0);
+				debug_din	: in  std_logic_vector (31 downto 0);
+				debug_we    : in  std_logic;
+				debug_dout  : out std_logic_vector (31 downto 0)
+--				ctrl        : out std_logic_vector (6 downto 0);
+--				status		: in  std_logic_vector (2 downto 0)
+			);
+end sort;
+
+architecture struct of sort is
+	--------------------------------------------------------------------------------
+	--  	DECLARACIÓN DE SEÑALES
+	--------------------------------------------------------------------------------
+	signal ctrl 		: std_logic_vector (6 downto 0); --CONTROL VECTOR
+	signal status		: std_logic_vector (2 downto 0); --STATUS  VECTOR 
+	--------------------------------------------------------------------------------
+	component uc
+		port 		(
+						clk 			: in  std_logic;
+						rst_n			: in  std_logic;
+						ini			: in  std_logic;
+						fin 			: out std_logic;
+						ctrl        : out std_logic_vector (6 downto 0);
+						status		: in  std_logic_vector (2 downto 0)
+		
+					 );
+	end component;
+	
+	component cd
+		port 		(
+						clk   		: in  std_logic;
+						rst_n			: in  std_logic;
+						debug_addr 	: in  std_logic_vector (4  downto 0);
+						debug_we		: in  std_logic;
+						debug_din   : in  std_logic_vector (31 downto 0);
+						debug_dout  : out std_logic_vector (31 downto 0);
+						ctrl			: in  std_logic_vector (6  downto 0);
+						status		: out std_logic_vector (2  downto 0)
+					 );
+	end component;
+
+begin
+	--LA INSTANCIACION ES PUERTO A PUERTO
+	-----------------------------------------------------------------------------
+   --Instanciación PORT-MAP UC
+   -----------------------------------------------------------------------------
+	control  : uc port map (clk, rst_n, ini, fin, ctrl, status);
+	-----------------------------------------------------------------------------
+   --Instanciación PORT-MAP CD
+   -----------------------------------------------------------------------------
+	data     : cd port map (clk, rst_n, debug_addr, debug_we, 
+									debug_din, debug_dout, ctrl, status);
+	-----------------------------------------------------------------------------
+   --
+   -----------------------------------------------------------------------------
+
+end struct;
+
+
+---TB---
+----------------------------------------------------------------------------------
+-- Company:        Universidad Complutense de Madrid
+-- Engineer:       TOC&TC
+-- 
+-- Create Date:    
+-- Design Name:    sort
+-- Module Name:    tb_sort - beh 
+-- Project Name:   Practica 5
+-- Target Devices: Spartan-3 
+-- Tool versions:  ISE 14.1
+-- Description:    Testbech del sistema algoritmico con el algoritmo de
+--                 ordenacion de burbuja
+-- Dependencies: 
+-- Revision: 
+-- Additional Comments: 
+--
+----------------------------------------------------------------------------------
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+
+
+entity tb_sort is
+
+end tb_sort;
+
+architecture beh of tb_sort is
+  component sort
+    port(clk        : in  std_logic;
+         rst_n      : in  std_logic;
+         ini        : in  std_logic;
+         fin        : out std_logic;
+         debug_addr : in  std_logic_vector(4 downto 0);
+         debug_din  : in  std_logic_vector(31 downto 0);
+         debug_we   : in  std_logic;
+         debug_dout : out std_logic_vector(31 downto 0));
+  end component;
+
+  signal clk, rst_n, ini, fin, debug_we : std_logic;
+  signal debug_addr                     : std_logic_vector(4 downto 0);
+  signal debug_data, debug_out          : std_logic_vector(31 downto 0);
+begin
+
+
+  -------------------------------------------------------------------------------
+  -- Component instantiation
+  -------------------------------------------------------------------------------
+
+  i_dut : sort
+    port map (
+      clk        => clk,
+      rst_n      => rst_n,
+      ini        => ini,
+      debug_addr => debug_addr,
+      debug_we   => debug_we,
+      debug_din  => debug_data,
+      debug_dout => debug_out,
+      fin        => fin
+      );
+
+  -----------------------------------------------------------------------------
+  -- Process declaration
+  -----------------------------------------------------------------------------
+  -- Input clock
+  p_clk : process
+  begin
+    clk <= '0', '1' after 5 ns;
+    wait for 10 ns;
+  end process p_clk;
+
+  -- External reset
+  p_rst : process
+  begin
+    rst_n <= '0';
+    wait for 250 ns;
+    rst_n <= '1';
+    wait;
+  end process p_rst;
+
+  p_driver : process
+    type t_mem is array (0 to 31) of std_logic_vector(31 downto 0);
+    variable v_i, v_j : natural := 0;
+    variable mem1_red : t_mem := (x"723AF37B",
+                                  x"71CB8902",
+                                  x"6604D364",
+                                  x"655C3976",
+                                  x"5930D12F",
+                                  x"586ACE26",
+                                  x"538F646F",
+                                  x"4B769E12",
+                                  x"41B492F3",
+                                  x"3F730729",
+                                  x"36A863D1",
+                                  x"2C232D4C",
+                                  x"2B70EC74",
+                                  x"2A46A4E9",
+                                  x"20000002",
+                                  x"11111111",
+                                  x"0F8B9FE4",
+                                  x"90661F5C",
+                                  x"923923AF",
+                                  x"99999999",
+                                  x"9B4D20F7",
+                                  x"9BF0A6BA",
+                                  x"A07A0C1B",
+                                  x"A8968A40",
+                                  x"AAFFBBCC",
+                                  x"AD2E8083",
+                                  x"CAEA0196",
+                                  x"D543BE76",
+                                  x"D5670931",
+                                  x"DDEEFF00",
+                                  x"E17A88DD",
+                                  x"E638024A"
+                                  );
+  begin
+    ini        <= '0';
+    debug_we   <= '0';
+    debug_addr <= "00000";
+    debug_data <= x"00000000";
+    wait for 250 ns;
+    wait until falling_edge(clk);
+    wait until rising_edge(clk);
+    ini        <= '1';
+    wait until rising_edge(clk);
+    wait until rising_edge(clk);
+    ini        <= '0';
+    wait until fin = '1';
+    wait until rising_edge(clk);
+    -- Lectura de los datos cargados inicialmente en la memoria ordenados
+    read_mem_loop1 : for v_i in 0 to 31 loop
+      debug_addr <= std_logic_vector(to_unsigned(v_i, 5));
+      wait until rising_edge(clk);
+      assert debug_out = mem1_red(v_i) report "Lectura incorrecta" severity warning;
+    end loop;
+
+    -- Escritura de datos en memoria
+    wait until rising_edge(clk);
+    wait;
+  end process p_driver;
+
+end beh;
