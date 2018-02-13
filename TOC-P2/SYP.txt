@@ -1,0 +1,19 @@
+-- señales de estado:
+
+constant c_dormida_st   : std_logic_vector(1 downto 0) := "00";
+constant c_tranquila_st : std_logic_vector(1 downto 0) := "01";
+constant c_asustada_st  : std_logic_vector(1 downto 0) := "10";
+constant c_habla_st     : std_logic_vector(1 downto 0) := "11";
+
+signal current_state, next_state : std_logic_vector(1 downto 0);
+
+-- entidad muñeca
+
+entity muneca is
+	port(clk : in std_logic;
+	     rst : in std_logic;
+	     r   : in std_logic;
+	     c   : in std_logic;
+	     g   : out std_logic;
+	     l   : out std_logic);
+end muneca;
