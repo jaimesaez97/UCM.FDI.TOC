@@ -1,0 +1,29 @@
+Command line:
+   tb_mult_ieee754_isim_beh.exe
+     -simmode  gui
+     -simrunnum  0
+     -socket  49619
+
+Mon Jan 15 16:23:38 2018
+
+
+ Elaboration Time: 0.062401 sec
+
+ Current Memory Usage: 667.238 Meg
+
+ Total Signals          : 90
+ Total Nets             : 500
+ Total Signal Drivers   : 59
+ Total Blocks           : 6
+ Total Primitive Blocks : 4
+ Total Processes        : 35
+ Total Traceable Variables  : 13
+ Total Scalar Nets and Variables : 983
+Total Line Count : 159
+
+ Total Simulation Time: 0.062401 sec
+
+ Current Memory Usage: 667.238 Meg
+
+Mon Jan 15 16:23:44 2018
+

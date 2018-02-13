@@ -1,0 +1,1 @@
+-intstyle "ise" -incremental -o "C:/Workspace VHDL limpio/TOC-P6/P6/tb_mult_ieee754_isim_beh.exe" -prj "C:/Workspace VHDL limpio/TOC-P6/P6/tb_mult_ieee754_beh.prj" "work.tb_mult_ieee754" 

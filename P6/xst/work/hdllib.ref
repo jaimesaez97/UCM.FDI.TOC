@@ -1,0 +1,6 @@
+AR cd behavioral "C:/Workspace VHDL limpio/TOC-P6/P6/cd.vhd" sub00/vhpl01 1516045896
+EN cd NULL "C:/Workspace VHDL limpio/TOC-P6/P6/cd.vhd" sub00/vhpl00 1516045895
+EN mult_ieee754 NULL "C:/Workspace VHDL limpio/TOC-P6/P6/mult_ieee754.vhd" sub00/vhpl04 1514206944
+AR uc behavioral "C:/Workspace VHDL limpio/TOC-P6/P6/uc.vhd" sub00/vhpl03 1516029844
+EN uc NULL "C:/Workspace VHDL limpio/TOC-P6/P6/uc.vhd" sub00/vhpl02 1516029843
+AR mult_ieee754 behavioral "C:/Workspace VHDL limpio/TOC-P6/P6/mult_ieee754.vhd" sub00/vhpl05 1514206945

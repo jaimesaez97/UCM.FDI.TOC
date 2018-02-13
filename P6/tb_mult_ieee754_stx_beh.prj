@@ -1,0 +1,4 @@
+vhdl isim_temp "uc.vhd"
+vhdl isim_temp "cd.vhd"
+vhdl isim_temp "mult_ieee754.vhd"
+vhdl isim_temp "tb_mult_ieee754.vhd"

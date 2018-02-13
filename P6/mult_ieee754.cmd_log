@@ -1,0 +1,1 @@
+xst -intstyle ise -ifn "C:/Workspace VHDL limpio/TOC-P6/P6/mult_ieee754.xst" -ofn "C:/Workspace VHDL limpio/TOC-P6/P6/mult_ieee754.syr" 

@@ -1,0 +1,4 @@
+vhdl work "uc.vhd"
+vhdl work "cd.vhd"
+vhdl work "mult_ieee754.vhd"
+vhdl work "tb_mult_ieee754.vhd"
