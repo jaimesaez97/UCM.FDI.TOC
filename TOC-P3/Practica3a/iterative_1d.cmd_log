@@ -1,0 +1,19 @@
+xst -intstyle ise -ifn "D:/Practica3a/iterative_1d.xst" -ofn "D:/Practica3a/iterative_1d.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -i -p xc3s1000-ft256-5 "iterative_1d.ngc" iterative_1d.ngd  
+netgen -intstyle ise -insert_glbl true -w -dir netgen/translate -ofmt verilog -sim iterative_1d.ngd iterative_1d_translate.v 
+xst -intstyle ise -ifn "C:/Workspace VHDL limpio/Practica3a/iterative_1d.xst" -ofn "C:/Workspace VHDL limpio/Practica3a/iterative_1d.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -i -p xc3s1000-ft256-5 "iterative_1d.ngc" iterative_1d.ngd  
+netgen -intstyle ise -insert_glbl true -w -dir netgen/translate -ofmt verilog -sim iterative_1d.ngd iterative_1d_translate.v 
+map -intstyle ise -p xc3s1000-ft256-5 -cm area -ir off -pr off -c 100 -o iterative_1d_map.ncd iterative_1d.ngd iterative_1d.pcf 
+xst -intstyle ise -ifn "C:/Workspace VHDL limpio/Practica3a/iterative_1d.xst" -ofn "C:/Workspace VHDL limpio/Practica3a/iterative_1d.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -i -p xc3s1000-ft256-5 "iterative_1d.ngc" iterative_1d.ngd  
+map -intstyle ise -p xc3s1000-ft256-5 -cm area -ir off -pr off -c 100 -o iterative_1d_map.ncd iterative_1d.ngd iterative_1d.pcf 
+par -w -intstyle ise -ol high -t 1 iterative_1d_map.ncd iterative_1d.ncd iterative_1d.pcf 
+trce -intstyle ise -v 3 -s 5 -n 3 -fastpaths -xml iterative_1d.twx iterative_1d.ncd -o iterative_1d.twr iterative_1d.pcf 
+bitgen -intstyle ise -f iterative_1d.ut iterative_1d.ncd 
+map -intstyle ise -p xc3s1000-ft256-5 -cm area -ir off -pr off -c 100 -o iterative_1d_map.ncd iterative_1d.ngd iterative_1d.pcf 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -i -p xc3s1000-ft256-5 "iterative_1d.ngc" iterative_1d.ngd  
+xst -intstyle ise -ifn "C:/Workspace VHDL limpio/Practica3a/iterative_1d.xst" -ofn "C:/Workspace VHDL limpio/Practica3a/iterative_1d.syr" 
+xst -intstyle ise -ifn "C:/Workspace VHDL limpio/Practica3a/iterative_1d.xst" -ofn "C:/Workspace VHDL limpio/Practica3a/iterative_1d.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -i -p xc3s1000-ft256-5 "iterative_1d.ngc" iterative_1d.ngd  
+netgen -intstyle ise -insert_glbl true -w -dir netgen/translate -ofmt verilog -sim iterative_1d.ngd iterative_1d_translate.v 

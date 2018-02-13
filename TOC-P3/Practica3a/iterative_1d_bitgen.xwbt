@@ -1,0 +1,8 @@
+INTSTYLE=ise
+INFILE=C:\Workspace VHDL limpio\Practica3a\iterative_1d.ncd
+OUTFILE=C:\Workspace VHDL limpio\Practica3a\iterative_1d.bit
+FAMILY=Spartan3
+PART=xc3s1000-5ft256
+WORKINGDIR=C:\Workspace VHDL limpio\Practica3a
+LICENSE=WebPack
+USER_INFO=211415365_0_0_219

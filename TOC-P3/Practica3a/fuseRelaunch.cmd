@@ -1,0 +1,1 @@
+-intstyle "ise" -incremental -o "C:/Workspace VHDL limpio/Practica3a/tb_iterative_1d_isim_beh.exe" -prj "C:/Workspace VHDL limpio/Practica3a/tb_iterative_1d_beh.prj" "work.tb_iterative_1d" 

@@ -1,0 +1,25 @@
+Running: fuse.exe -relaunch -intstyle "ise" -incremental -o "C:/Workspace VHDL limpio/Practica3a/tb_iterative_1d_isim_beh.exe" -prj "C:/Workspace VHDL limpio/Practica3a/tb_iterative_1d_beh.prj" "work.tb_iterative_1d" 
+ISim P.20131013 (signature 0x7708f090)
+Number of CPUs detected in this system: 4
+Turning on mult-threading, number of parallel sub-compilation jobs: 8 
+Determining compilation order of HDL files
+Parsing VHDL file "C:/Workspace VHDL limpio/Practica3a/definitions.vhd" into library work
+Parsing VHDL file "C:/Workspace VHDL limpio/Practica3a/cell.vhd" into library work
+Parsing VHDL file "C:/Workspace VHDL limpio/Practica3a/iterative_1d.vhd" into library work
+Parsing VHDL file "C:/Workspace VHDL limpio/Practica3a/tb_iterative_1d.vhd" into library work
+Starting static elaboration
+Completed static elaboration
+Compiling package standard
+Compiling package std_logic_1164
+Compiling package numeric_std
+Compiling package textio
+Compiling package definitions
+Compiling architecture behavioral of entity cell [\cell(4)\]
+Compiling architecture behavioral of entity iterative_1d [\iterative_1d(16,4)\]
+Compiling architecture beh of entity tb_iterative_1d
+Time Resolution for simulation is 1ps.
+Waiting for 2 sub-compilation(s) to finish...
+Compiled 10 VHDL Units
+Built simulation executable C:/Workspace VHDL limpio/Practica3a/tb_iterative_1d_isim_beh.exe
+Fuse Memory Usage: 35136 KB
+Fuse CPU Usage: 530 ms
