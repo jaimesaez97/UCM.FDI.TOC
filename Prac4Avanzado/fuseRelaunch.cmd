@@ -1,0 +1,1 @@
+-intstyle "ise" -incremental -o "C:/Workspace VHDL limpio/Prac4Avanzado/tb_divider_isim_beh.exe" -prj "C:/Workspace VHDL limpio/Prac4Avanzado/tb_divider_beh.prj" "work.tb_divider" 
